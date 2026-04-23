@@ -51,7 +51,17 @@ mongoose
   .then(async () => {
     console.log('✅ MongoDB connected')
     await seedDatabase()
-    app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`))
+    const server = app.listen(PORT, () =>
+      console.log(`🚀 Server running at http://localhost:${PORT}`)
+    )
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use. Kill the other process and restart.`)
+        process.exit(1)
+      } else {
+        throw err
+      }
+    })
   })
   .catch((err) => {
     console.error('❌ MongoDB connection error:', err.message)
