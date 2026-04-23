@@ -1,49 +1,11 @@
-import { useRef } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { FiBriefcase, FiBook, FiCalendar, FiMapPin } from 'react-icons/fi'
+import { useContent } from '../context/ContentContext'
+import api from '../utils/api'
 
-const experiences = [
-  {
-    type: 'work',
-    role: 'Senior Full Stack Developer',
-    company: 'TechVision Labs',
-    period: '2023 – Present',
-    location: 'Ho Chi Minh City, Vietnam',
-    description: 'Lead development of AI-powered SaaS platform serving 50K+ users. Architected microservices, improved performance by 60%, and mentored a team of 5 junior developers.',
-    tech: ['React', 'Node.js', 'MongoDB', 'Docker', 'AWS'],
-    color: '#7c3aed',
-  },
-  {
-    type: 'work',
-    role: 'Frontend Developer',
-    company: 'DigitalCraft Studio',
-    period: '2022 – 2023',
-    location: 'Remote',
-    description: 'Built pixel-perfect UIs for 15+ client projects. Specialized in 3D web experiences with Three.js and interactive animations with GSAP and Framer Motion.',
-    tech: ['React', 'Three.js', 'GSAP', 'TypeScript', 'TailwindCSS'],
-    color: '#06b6d4',
-  },
-  {
-    type: 'work',
-    role: 'Backend Developer',
-    company: 'DataStream Inc.',
-    period: '2021 – 2022',
-    location: 'Hanoi, Vietnam',
-    description: 'Developed RESTful APIs and GraphQL services for a real-time data analytics platform. Optimized MongoDB queries and implemented Redis caching layer.',
-    tech: ['Node.js', 'Express', 'MongoDB', 'Redis', 'GraphQL'],
-    color: '#8b5cf6',
-  },
-  {
-    type: 'education',
-    role: 'B.Sc. Computer Science',
-    company: 'Vietnam National University',
-    period: '2018 – 2022',
-    location: 'Hanoi, Vietnam',
-    description: 'Graduated with honors. Specialized in Software Engineering with thesis on "Real-time Distributed Systems using WebSockets and Event-Driven Architecture".',
-    tech: ['Algorithms', 'Data Structures', 'Distributed Systems', 'ML'],
-    color: '#22d3ee',
-  },
-]
+const WORK_COLORS = ['#7c3aed', '#06b6d4', '#8b5cf6', '#22d3ee']
+const EDU_COLORS  = ['#22d3ee', '#f59e0b']
 
 function TimelineItem({ item, index, isLast }) {
   const ref = useRef()
@@ -58,12 +20,8 @@ function TimelineItem({ item, index, isLast }) {
       transition={{ delay: index * 0.15, duration: 0.7, ease: 'easeOut' }}
       className="relative flex gap-6 pb-12 last:pb-0"
     >
-      {/* Timeline line */}
-      {!isLast && (
-        <div className="absolute left-5 top-12 bottom-0 w-px timeline-line" />
-      )}
+      {!isLast && <div className="absolute left-5 top-12 bottom-0 w-px timeline-line" />}
 
-      {/* Icon */}
       <div className="relative z-10 flex-shrink-0">
         <motion.div
           initial={{ scale: 0 }}
@@ -74,59 +32,49 @@ function TimelineItem({ item, index, isLast }) {
         >
           {isWork
             ? <FiBriefcase size={16} style={{ color: item.color }} />
-            : <FiBook size={16} style={{ color: item.color }} />
-          }
+            : <FiBook size={16} style={{ color: item.color }} />}
         </motion.div>
       </div>
 
-      {/* Content card */}
       <motion.div
         whileHover={{ x: 4 }}
         transition={{ duration: 0.2 }}
         className="glass rounded-2xl p-6 flex-1 group"
       >
-        {/* Type badge */}
         <div className="flex flex-wrap items-center gap-3 mb-3">
           <span className="font-inter text-xs px-2.5 py-1 rounded-full font-medium"
             style={{ background: `${item.color}18`, color: item.color, border: `1px solid ${item.color}30` }}>
             {isWork ? 'Work' : 'Education'}
           </span>
-          <div className="flex items-center gap-1 text-slate-600 text-xs font-inter">
-            <FiCalendar size={11} />
-            <span>{item.period}</span>
-          </div>
-          <div className="flex items-center gap-1 text-slate-600 text-xs font-inter">
-            <FiMapPin size={11} />
-            <span>{item.location}</span>
-          </div>
+          {item.period && (
+            <div className="flex items-center gap-1 text-slate-600 text-xs font-inter">
+              <FiCalendar size={11} /><span>{item.period}</span>
+            </div>
+          )}
+          {item.location && (
+            <div className="flex items-center gap-1 text-slate-600 text-xs font-inter">
+              <FiMapPin size={11} /><span>{item.location}</span>
+            </div>
+          )}
         </div>
 
-        {/* Role & company */}
-        <h3 className="font-grotesk font-semibold text-white text-lg mb-0.5">
-          {item.role}
-        </h3>
-        <p className="font-inter font-medium text-sm mb-3"
-          style={{ color: item.color }}>
+        <h3 className="font-grotesk font-semibold text-white text-lg mb-0.5">{item.role}</h3>
+        <p className="font-inter font-medium text-sm mb-3" style={{ color: item.color }}>
           @ {item.company}
         </p>
-
-        {/* Description */}
-        <p className="font-inter text-slate-500 text-sm leading-relaxed mb-4">
-          {item.description}
-        </p>
-
-        {/* Tech tags */}
-        <div className="flex flex-wrap gap-1.5">
-          {item.tech.map(t => (
-            <span key={t}
-              className="font-inter text-xs px-2.5 py-1 rounded-lg"
-              style={{ background: 'rgba(255,255,255,0.04)', color: '#64748b', border: '1px solid rgba(255,255,255,0.06)' }}>
-              {t}
-            </span>
-          ))}
-        </div>
-
-        {/* Hover accent */}
+        {item.description && (
+          <p className="font-inter text-slate-500 text-sm leading-relaxed mb-4">{item.description}</p>
+        )}
+        {item.tech?.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {item.tech.map(t => (
+              <span key={t} className="font-inter text-xs px-2.5 py-1 rounded-lg"
+                style={{ background: 'rgba(255,255,255,0.04)', color: '#64748b', border: '1px solid rgba(255,255,255,0.06)' }}>
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="absolute left-0 top-4 bottom-4 w-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{ background: `linear-gradient(180deg, transparent, ${item.color}, transparent)` }} />
       </motion.div>
@@ -135,8 +83,31 @@ function TimelineItem({ item, index, isLast }) {
 }
 
 export default function Experience() {
+  const { content } = useContent()
+  const { experience: ec } = content
+
+  const [timeline, setTimeline] = useState([])
   const sectionRef = useRef()
   const inView = useInView(sectionRef, { once: true, margin: '-100px' })
+
+  useEffect(() => {
+    api.get('/api/experience').then(res => {
+      if (res.data?.data) {
+        const { experience = [], education = [] } = res.data.data
+        const combined = [
+          ...experience.map((e, i) => ({
+            ...e, type: 'work', color: WORK_COLORS[i % WORK_COLORS.length],
+          })),
+          ...education.map((e, i) => ({
+            ...e, type: 'education',
+            role: e.degree, company: e.school,
+            color: EDU_COLORS[i % EDU_COLORS.length],
+          })),
+        ]
+        setTimeline(combined)
+      }
+    }).catch(() => {})
+  }, [])
 
   return (
     <section id="experience" ref={sectionRef} className="relative py-28 overflow-hidden"
@@ -152,25 +123,17 @@ export default function Experience() {
           className="mb-14"
         >
           <p className="font-inter text-purple-400 text-sm font-medium tracking-widest uppercase mb-3">
-            04 — Experience
+            {ec.sectionLabel}
           </p>
           <h2 className="font-grotesk font-bold text-4xl md:text-5xl mb-4">
-            My <span className="gradient-text">Journey</span>
+            {ec.heading} <span className="gradient-text">{ec.headingAccent}</span>
           </h2>
-          <p className="font-inter text-slate-500 text-base max-w-xl">
-            The path that shaped my skills and perspective as a developer.
-          </p>
+          <p className="font-inter text-slate-500 text-base max-w-xl">{ec.description}</p>
         </motion.div>
 
-        {/* Timeline */}
         <div className="max-w-3xl">
-          {experiences.map((item, i) => (
-            <TimelineItem
-              key={i}
-              item={item}
-              index={i}
-              isLast={i === experiences.length - 1}
-            />
+          {timeline.map((item, i) => (
+            <TimelineItem key={item._id || i} item={item} index={i} isLast={i === timeline.length - 1} />
           ))}
         </div>
       </div>

@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-
-const navLinks = [
-  { label: 'About', href: '#about' },
-  { label: 'Skills', href: '#skills' },
-  { label: 'Projects', href: '#projects' },
-  { label: 'Experience', href: '#experience' },
-  { label: 'Contact', href: '#contact' },
-]
+import { useContent } from '../context/ContentContext'
 
 export default function Navbar() {
+  const { content } = useContent()
+  const { navbar } = content
+
+  const navLinks = (navbar.links || []).map(label => ({
+    label,
+    href: `#${label.toLowerCase()}`,
+  }))
+
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
@@ -22,7 +23,6 @@ export default function Navbar() {
       setScrolled(scrollY > 60)
       setScrollProgress((scrollY / docHeight) * 100)
 
-      // Detect active section
       const sections = navLinks.map(l => l.href.slice(1))
       for (const id of [...sections].reverse()) {
         const el = document.getElementById(id)
@@ -34,12 +34,11 @@ export default function Navbar() {
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [navLinks.length])
 
   const handleNavClick = (href) => {
     setMenuOpen(false)
-    const id = href.slice(1)
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+    document.getElementById(href.slice(1))?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
@@ -48,10 +47,7 @@ export default function Navbar() {
       <div className="fixed top-0 left-0 w-full h-0.5 z-50" style={{ background: 'rgba(255,255,255,0.04)' }}>
         <motion.div
           className="h-full origin-left"
-          style={{
-            background: 'linear-gradient(90deg, #7c3aed, #06b6d4)',
-            scaleX: scrollProgress / 100,
-          }}
+          style={{ background: 'linear-gradient(90deg, #7c3aed, #06b6d4)', scaleX: scrollProgress / 100 }}
         />
       </div>
 
@@ -59,9 +55,7 @@ export default function Navbar() {
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
-        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
-          scrolled ? 'glass py-3' : 'py-5 bg-transparent'
-        }`}
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${scrolled ? 'glass py-3' : 'py-5 bg-transparent'}`}
       >
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
@@ -116,7 +110,7 @@ export default function Navbar() {
               className="px-5 py-2.5 rounded-full text-sm font-medium font-inter text-white"
               style={{ background: 'linear-gradient(135deg, #7c3aed, #06b6d4)' }}
             >
-              Hire Me
+              {navbar.cta}
             </motion.button>
           </div>
 
@@ -126,18 +120,12 @@ export default function Navbar() {
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle menu"
           >
-            <motion.span
-              className="block w-6 h-0.5 bg-white rounded"
-              animate={{ rotate: menuOpen ? 45 : 0, y: menuOpen ? 8 : 0 }}
-            />
-            <motion.span
-              className="block w-6 h-0.5 bg-white rounded"
-              animate={{ opacity: menuOpen ? 0 : 1 }}
-            />
-            <motion.span
-              className="block w-6 h-0.5 bg-white rounded"
-              animate={{ rotate: menuOpen ? -45 : 0, y: menuOpen ? -8 : 0 }}
-            />
+            <motion.span className="block w-6 h-0.5 bg-white rounded"
+              animate={{ rotate: menuOpen ? 45 : 0, y: menuOpen ? 8 : 0 }} />
+            <motion.span className="block w-6 h-0.5 bg-white rounded"
+              animate={{ opacity: menuOpen ? 0 : 1 }} />
+            <motion.span className="block w-6 h-0.5 bg-white rounded"
+              animate={{ rotate: menuOpen ? -45 : 0, y: menuOpen ? -8 : 0 }} />
           </button>
         </div>
       </motion.nav>
@@ -172,7 +160,7 @@ export default function Navbar() {
               className="mt-4 px-8 py-3 rounded-full font-inter font-medium text-white"
               style={{ background: 'linear-gradient(135deg, #7c3aed, #06b6d4)' }}
             >
-              Hire Me
+              {navbar.cta}
             </motion.button>
           </motion.div>
         )}

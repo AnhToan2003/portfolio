@@ -14,15 +14,14 @@ function Section({ title, children }) {
 }
 
 function Field({ label, name, value, onChange, type = 'text', rows }) {
-  const baseClass = 'w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-purple-500/50 transition-colors'
+  const base = 'w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-purple-500/50 transition-colors'
   return (
     <div>
       <label className="block text-slate-500 text-xs mb-1.5">{label}</label>
-      {rows ? (
-        <textarea name={name} value={value} onChange={onChange} rows={rows} className={baseClass} />
-      ) : (
-        <input type={type} name={name} value={value} onChange={onChange} className={baseClass} />
-      )}
+      {rows
+        ? <textarea name={name} value={value} onChange={onChange} rows={rows} className={base} />
+        : <input type={type} name={name} value={value} onChange={onChange} className={base} />
+      }
     </div>
   )
 }
@@ -32,26 +31,20 @@ export default function ContentManager() {
   const [form, setForm] = useState(null)
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    setForm(JSON.parse(JSON.stringify(content)))
-  }, [content])
+  useEffect(() => { setForm(JSON.parse(JSON.stringify(content))) }, [content])
 
-  function handleChange(section, field, value) {
+  function set(section, field, value) {
+    setForm(prev => ({ ...prev, [section]: { ...prev[section], [field]: value } }))
+  }
+
+  function setNested(section, parent, field, value) {
     setForm(prev => ({
       ...prev,
-      [section]: { ...prev[section], [field]: value },
+      [section]: { ...prev[section], [parent]: { ...prev[section][parent], [field]: value } },
     }))
   }
 
-  function handleArrayChange(section, field, index, value) {
-    setForm(prev => {
-      const arr = [...(prev[section][field] || [])]
-      arr[index] = value
-      return { ...prev, [section]: { ...prev[section], [field]: arr } }
-    })
-  }
-
-  function handleStatChange(index, key, value) {
+  function setStat(index, key, value) {
     setForm(prev => {
       const stats = [...(prev.about.stats || [])]
       stats[index] = { ...stats[index], [key]: value }
@@ -87,7 +80,7 @@ export default function ContentManager() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-white font-bold text-2xl">Content Manager</h1>
-          <p className="text-slate-500 text-sm mt-1">Edit all site content — changes are saved to the database.</p>
+          <p className="text-slate-500 text-sm mt-1">Edit all site text — saved to database instantly.</p>
         </div>
         <div className="flex gap-3">
           <button onClick={handleReset}
@@ -95,55 +88,63 @@ export default function ContentManager() {
             <FiRefreshCw size={14} /> Reset
           </button>
           <button onClick={handleSave} disabled={saving}
-            className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium text-white transition-all disabled:opacity-60"
+            className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium text-white disabled:opacity-60"
             style={{ background: 'linear-gradient(135deg, #7c3aed, #06b6d4)' }}>
-            <FiSave size={14} />
-            {saving ? 'Saving…' : 'Save All'}
+            <FiSave size={14} />{saving ? 'Saving…' : 'Save All'}
           </button>
         </div>
       </div>
 
+      {/* Navbar */}
+      <Section title="Navbar">
+        <Field label="Brand name" value={form.navbar?.brand || ''} onChange={e => set('navbar', 'brand', e.target.value)} />
+        <Field label="CTA button text" value={form.navbar?.cta || ''} onChange={e => set('navbar', 'cta', e.target.value)} />
+        <div>
+          <label className="block text-slate-500 text-xs mb-1.5">Nav links (one per line)</label>
+          <textarea rows={5}
+            value={(form.navbar?.links || []).join('\n')}
+            onChange={e => set('navbar', 'links', e.target.value.split('\n').filter(Boolean))}
+            className="w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-purple-500/50 transition-colors" />
+        </div>
+      </Section>
+
       {/* Hero */}
       <Section title="Hero Section">
-        <Field label="Badge text" name="badge" value={form.hero.badge} onChange={e => handleChange('hero', 'badge', e.target.value)} />
-        <Field label="Greeting" name="greeting" value={form.hero.greeting} onChange={e => handleChange('hero', 'greeting', e.target.value)} />
-        <Field label="Name" name="name" value={form.hero.name} onChange={e => handleChange('hero', 'name', e.target.value)} />
-        <Field label="Description" name="description" value={form.hero.description} onChange={e => handleChange('hero', 'description', e.target.value)} rows={3} />
-        <Field label="Primary CTA" name="primary" value={form.hero.cta?.primary || ''} onChange={e => handleChange('hero', 'cta', { ...form.hero.cta, primary: e.target.value })} />
-        <Field label="Secondary CTA" name="secondary" value={form.hero.cta?.secondary || ''} onChange={e => handleChange('hero', 'cta', { ...form.hero.cta, secondary: e.target.value })} />
+        <Field label="Badge text" value={form.hero.badge} onChange={e => set('hero', 'badge', e.target.value)} />
+        <Field label="Greeting" value={form.hero.greeting} onChange={e => set('hero', 'greeting', e.target.value)} />
+        <Field label="Name" value={form.hero.name} onChange={e => set('hero', 'name', e.target.value)} />
+        <Field label="Description" value={form.hero.description} onChange={e => set('hero', 'description', e.target.value)} rows={3} />
+        <Field label="Primary CTA" value={form.hero.cta?.primary || ''} onChange={e => setNested('hero', 'cta', 'primary', e.target.value)} />
+        <Field label="Secondary CTA" value={form.hero.cta?.secondary || ''} onChange={e => setNested('hero', 'cta', 'secondary', e.target.value)} />
         <div>
           <label className="block text-slate-500 text-xs mb-1.5">Typing words (one per line)</label>
-          <textarea
-            rows={4}
+          <textarea rows={4}
             value={(form.hero.typingWords || []).join('\n')}
-            onChange={e => handleChange('hero', 'typingWords', e.target.value.split('\n').filter(Boolean))}
-            className="w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-purple-500/50 transition-colors"
-          />
+            onChange={e => set('hero', 'typingWords', e.target.value.split('\n').filter(Boolean))}
+            className="w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-purple-500/50 transition-colors" />
         </div>
       </Section>
 
       {/* About */}
       <Section title="About Section">
-        <Field label="Section label" name="sectionLabel" value={form.about.sectionLabel} onChange={e => handleChange('about', 'sectionLabel', e.target.value)} />
-        <Field label="Heading" name="heading" value={form.about.heading} onChange={e => handleChange('about', 'heading', e.target.value)} />
-        <Field label="Heading accent" name="headingAccent" value={form.about.headingAccent} onChange={e => handleChange('about', 'headingAccent', e.target.value)} />
+        <Field label="Section label" value={form.about.sectionLabel} onChange={e => set('about', 'sectionLabel', e.target.value)} />
+        <Field label="Heading" value={form.about.heading} onChange={e => set('about', 'heading', e.target.value)} />
+        <Field label="Heading accent" value={form.about.headingAccent} onChange={e => set('about', 'headingAccent', e.target.value)} />
         <div>
           <label className="block text-slate-500 text-xs mb-1.5">Paragraphs (one per line)</label>
-          <textarea
-            rows={5}
+          <textarea rows={5}
             value={(form.about.paragraphs || []).join('\n')}
-            onChange={e => handleChange('about', 'paragraphs', e.target.value.split('\n').filter(Boolean))}
-            className="w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-purple-500/50 transition-colors"
-          />
+            onChange={e => set('about', 'paragraphs', e.target.value.split('\n').filter(Boolean))}
+            className="w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-purple-500/50 transition-colors" />
         </div>
         <div>
           <label className="block text-slate-500 text-xs mb-2">Stats</label>
           <div className="grid grid-cols-2 gap-3">
             {(form.about.stats || []).map((stat, i) => (
               <div key={i} className="flex gap-2">
-                <input value={stat.value} onChange={e => handleStatChange(i, 'value', e.target.value)}
+                <input value={stat.value} onChange={e => setStat(i, 'value', e.target.value)}
                   placeholder="Value" className="w-1/3 bg-dark-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-purple-500/50" />
-                <input value={stat.label} onChange={e => handleStatChange(i, 'label', e.target.value)}
+                <input value={stat.label} onChange={e => setStat(i, 'label', e.target.value)}
                   placeholder="Label" className="flex-1 bg-dark-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-purple-500/50" />
               </div>
             ))}
@@ -152,33 +153,72 @@ export default function ContentManager() {
         <div>
           <label className="block text-slate-500 text-xs mb-1.5">Tech badges (comma-separated)</label>
           <input value={(form.about.techBadges || []).join(', ')}
-            onChange={e => handleChange('about', 'techBadges', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+            onChange={e => set('about', 'techBadges', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
             className="w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-purple-500/50 transition-colors" />
         </div>
-        <Field label="Resume link" name="resumeLink" value={form.about.resumeLink || ''} onChange={e => handleChange('about', 'resumeLink', e.target.value)} />
-        <Field label="Resume button label" name="resumeLabel" value={form.about.resumeLabel || ''} onChange={e => handleChange('about', 'resumeLabel', e.target.value)} />
+        <Field label="Resume link" value={form.about.resumeLink || ''} onChange={e => set('about', 'resumeLink', e.target.value)} />
+        <Field label="Resume button label" value={form.about.resumeLabel || ''} onChange={e => set('about', 'resumeLabel', e.target.value)} />
+      </Section>
+
+      {/* Skills */}
+      <Section title="Skills Section">
+        <Field label="Section label" value={form.skills?.sectionLabel || ''} onChange={e => set('skills', 'sectionLabel', e.target.value)} />
+        <Field label="Heading" value={form.skills?.heading || ''} onChange={e => set('skills', 'heading', e.target.value)} />
+        <Field label="Heading accent" value={form.skills?.headingAccent || ''} onChange={e => set('skills', 'headingAccent', e.target.value)} />
+        <Field label="Description" value={form.skills?.description || ''} onChange={e => set('skills', 'description', e.target.value)} rows={2} />
+        <div>
+          <label className="block text-slate-500 text-xs mb-1.5">Filter categories (one per line)</label>
+          <textarea rows={4}
+            value={(form.skills?.categories || []).join('\n')}
+            onChange={e => set('skills', 'categories', e.target.value.split('\n').filter(Boolean))}
+            className="w-full bg-dark-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-purple-500/50 transition-colors" />
+          <p className="text-slate-600 text-xs mt-1">To manage individual skills, go to the Skills page.</p>
+        </div>
+      </Section>
+
+      {/* Projects */}
+      <Section title="Projects Section">
+        <Field label="Section label" value={form.projects?.sectionLabel || ''} onChange={e => set('projects', 'sectionLabel', e.target.value)} />
+        <Field label="Heading" value={form.projects?.heading || ''} onChange={e => set('projects', 'heading', e.target.value)} />
+        <Field label="Heading accent" value={form.projects?.headingAccent || ''} onChange={e => set('projects', 'headingAccent', e.target.value)} />
+        <Field label="Description" value={form.projects?.description || ''} onChange={e => set('projects', 'description', e.target.value)} rows={2} />
+        <Field label="GitHub URL" value={form.projects?.githubUrl || ''} onChange={e => set('projects', 'githubUrl', e.target.value)} />
+        <Field label="GitHub link label" value={form.projects?.githubLabel || ''} onChange={e => set('projects', 'githubLabel', e.target.value)} />
+        <p className="text-slate-600 text-xs">To manage individual projects, go to the Projects page.</p>
+      </Section>
+
+      {/* Experience */}
+      <Section title="Experience Section">
+        <Field label="Section label" value={form.experience?.sectionLabel || ''} onChange={e => set('experience', 'sectionLabel', e.target.value)} />
+        <Field label="Heading" value={form.experience?.heading || ''} onChange={e => set('experience', 'heading', e.target.value)} />
+        <Field label="Heading accent" value={form.experience?.headingAccent || ''} onChange={e => set('experience', 'headingAccent', e.target.value)} />
+        <Field label="Description" value={form.experience?.description || ''} onChange={e => set('experience', 'description', e.target.value)} rows={2} />
+        <p className="text-slate-600 text-xs">To manage individual entries, go to the Experience page.</p>
       </Section>
 
       {/* Contact */}
-      <Section title="Contact Info">
-        <Field label="Email" name="email" type="email" value={form.contact.email} onChange={e => handleChange('contact', 'email', e.target.value)} />
-        <Field label="Location" name="location" value={form.contact.location} onChange={e => handleChange('contact', 'location', e.target.value)} />
-        <Field label="Phone" name="phone" value={form.contact.phone} onChange={e => handleChange('contact', 'phone', e.target.value)} />
+      <Section title="Contact Section">
+        <Field label="Section label" value={form.contact.sectionLabel || ''} onChange={e => set('contact', 'sectionLabel', e.target.value)} />
+        <Field label="Heading" value={form.contact.heading || ''} onChange={e => set('contact', 'heading', e.target.value)} />
+        <Field label="Heading accent" value={form.contact.headingAccent || ''} onChange={e => set('contact', 'headingAccent', e.target.value)} />
+        <Field label="Email" type="email" value={form.contact.email} onChange={e => set('contact', 'email', e.target.value)} />
+        <Field label="Location" value={form.contact.location} onChange={e => set('contact', 'location', e.target.value)} />
+        <Field label="Phone" value={form.contact.phone} onChange={e => set('contact', 'phone', e.target.value)} />
       </Section>
 
       {/* Social */}
       <Section title="Social Links">
-        <Field label="GitHub URL" name="github" value={form.social.github} onChange={e => handleChange('social', 'github', e.target.value)} />
-        <Field label="LinkedIn URL" name="linkedin" value={form.social.linkedin} onChange={e => handleChange('social', 'linkedin', e.target.value)} />
-        <Field label="Twitter URL" name="twitter" value={form.social.twitter} onChange={e => handleChange('social', 'twitter', e.target.value)} />
+        <Field label="GitHub URL" value={form.social.github} onChange={e => set('social', 'github', e.target.value)} />
+        <Field label="LinkedIn URL" value={form.social.linkedin} onChange={e => set('social', 'linkedin', e.target.value)} />
+        <Field label="Twitter URL" value={form.social.twitter} onChange={e => set('social', 'twitter', e.target.value)} />
       </Section>
 
       {/* Footer */}
       <Section title="Footer">
-        <Field label="Tagline" name="tagline" value={form.footer.tagline} onChange={e => handleChange('footer', 'tagline', e.target.value)} />
-        <Field label="Copyright name" name="copyright" value={form.footer.copyright} onChange={e => handleChange('footer', 'copyright', e.target.value)} />
-        <Field label="Location" name="location" value={form.footer.location} onChange={e => handleChange('footer', 'location', e.target.value)} />
-        <Field label="Tech stack text" name="techStack" value={form.footer.techStack} onChange={e => handleChange('footer', 'techStack', e.target.value)} />
+        <Field label="Tagline" value={form.footer.tagline} onChange={e => set('footer', 'tagline', e.target.value)} />
+        <Field label="Copyright name" value={form.footer.copyright} onChange={e => set('footer', 'copyright', e.target.value)} />
+        <Field label="Location" value={form.footer.location} onChange={e => set('footer', 'location', e.target.value)} />
+        <Field label="Tech stack text" value={form.footer.techStack} onChange={e => set('footer', 'techStack', e.target.value)} />
       </Section>
     </div>
   )

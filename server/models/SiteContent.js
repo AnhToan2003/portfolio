@@ -42,6 +42,32 @@ const siteContentSchema = new mongoose.Schema(
       linkedin: { type: String },
       twitter: { type: String },
     },
+    navbar: {
+      brand: { type: String },
+      cta: { type: String },
+      links: [{ type: String }],
+    },
+    skills: {
+      sectionLabel: { type: String },
+      heading: { type: String },
+      headingAccent: { type: String },
+      description: { type: String },
+      categories: [{ type: String }],
+    },
+    projects: {
+      sectionLabel: { type: String },
+      heading: { type: String },
+      headingAccent: { type: String },
+      description: { type: String },
+      githubUrl: { type: String },
+      githubLabel: { type: String },
+    },
+    experience: {
+      sectionLabel: { type: String },
+      heading: { type: String },
+      headingAccent: { type: String },
+      description: { type: String },
+    },
     footer: {
       brand: { type: String },
       tagline: { type: String },

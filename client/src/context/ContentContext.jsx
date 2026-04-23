@@ -4,6 +4,11 @@ import api from '../utils/api'
 // Default fallback so components never render empty strings
 const DEFAULT = {
   site: { name: 'DevPortfolio', tagline: 'Building beautiful digital experiences.' },
+  navbar: {
+    brand: 'DevPortfolio',
+    cta: 'Hire Me',
+    links: ['About', 'Skills', 'Projects', 'Experience', 'Contact'],
+  },
   hero: {
     badge: 'Available for opportunities',
     greeting: "Hi, I'm",
@@ -31,6 +36,27 @@ const DEFAULT = {
     techBadges: ['React', 'TypeScript', 'Node.js', 'MongoDB', 'Three.js', 'TailwindCSS', 'Docker', 'AWS'],
     resumeLink: '/cv.pdf',
     resumeLabel: 'Download Resume',
+  },
+  skills: {
+    sectionLabel: '02 — Skills',
+    heading: 'Tech',
+    headingAccent: 'Arsenal',
+    description: 'A curated set of tools and technologies I use to build exceptional digital products.',
+    categories: ['All', 'Frontend', 'Backend', 'Tools & DevOps'],
+  },
+  projects: {
+    sectionLabel: '03 — Projects',
+    heading: 'Featured',
+    headingAccent: 'Work',
+    description: 'A selection of projects that showcase my skills across different domains.',
+    githubUrl: 'https://github.com',
+    githubLabel: 'View all on GitHub',
+  },
+  experience: {
+    sectionLabel: '04 — Experience',
+    heading: 'My',
+    headingAccent: 'Journey',
+    description: 'The path that shaped my skills and perspective as a developer.',
   },
   contact: {
     sectionLabel: '05 — Contact',
