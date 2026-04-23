@@ -1,0 +1,63 @@
+{
+  "site": {
+    "name": "DevPortfolio",
+    "tagline": "Building beautiful digital experiences with passion and precision."
+  },
+  "hero": {
+    "badge": "Available for opportunities",
+    "greeting": "Hi, I'm",
+    "name": "Anh Toan",
+    "subtitle": "Developer & Creator",
+    "typingWords": [
+      "Full Stack Developer",
+      "React & Node.js Expert",
+      "UI/UX Enthusiast",
+      "3D Web Creator"
+    ],
+    "description": "I craft beautiful, high-performance web experiences using modern technologies. Passionate about turning ideas into stunning digital realities.",
+    "cta": {
+      "primary": "View My Work",
+      "secondary": "Contact Me"
+    }
+  },
+  "about": {
+    "sectionLabel": "01 — About Me",
+    "heading": "Crafting Digital",
+    "headingAccent": "Experiences",
+    "paragraphs": [
+      "I'm a passionate Full Stack Developer with a love for building things that live on the internet. From sleek UIs to robust backends, I enjoy the entire product development journey.",
+      "With expertise in React, Node.js, and MongoDB, I build scalable applications that not only work perfectly but also look stunning. I believe great software is both functional and beautiful.",
+      "When I'm not coding, you'll find me exploring the latest in web tech, crafting 3D interactive experiences, or contributing to open-source projects."
+    ],
+    "stats": [
+      { "value": "3+", "label": "Years Experience" },
+      { "value": "40+", "label": "Projects Completed" },
+      { "value": "15+", "label": "Technologies" },
+      { "value": "99%", "label": "Client Satisfaction" }
+    ],
+    "techBadges": ["React", "TypeScript", "Node.js", "MongoDB", "Three.js", "TailwindCSS", "Docker", "AWS"],
+    "resumeLink": "/cv.pdf",
+    "resumeLabel": "Download Resume"
+  },
+  "contact": {
+    "sectionLabel": "05 — Contact",
+    "heading": "Let's Work",
+    "headingAccent": "Together",
+    "description": "Have a project in mind or want to collaborate? I'd love to hear from you.",
+    "email": "mranhtoandt@gmail.com",
+    "location": "Ho Chi Minh City, Vietnam",
+    "phone": "+84 xxx xxx xxx"
+  },
+  "social": {
+    "github": "https://github.com/AnhToan2003",
+    "linkedin": "https://linkedin.com/in/anhtoandt",
+    "twitter": "https://twitter.com/anhtoandt"
+  },
+  "footer": {
+    "brand": "DevPortfolio",
+    "tagline": "Building beautiful digital experiences with passion and precision.",
+    "copyright": "Anh Toan",
+    "techStack": "React · Node.js · MongoDB · Three.js",
+    "location": "Vietnam"
+  }
+}

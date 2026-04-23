@@ -33,6 +33,7 @@ app.use('/uploads', express.static(uploadsDir))
 
 // ─── ROUTES ──────────────────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'))
+app.use('/api/content', require('./routes/content'))
 app.use('/api/profile', require('./routes/profile'))
 app.use('/api/projects', require('./routes/projects'))
 app.use('/api/skills', require('./routes/skills'))
@@ -61,6 +62,8 @@ async function seedDatabase() {
   const User = require('./models/User')
   const Profile = require('./models/Profile')
   const Project = require('./models/Project')
+  const SiteContent = require('./models/SiteContent')
+  const defaultContent = require('./config/siteContent.json')
 
   // Seed admin user
   const adminExists = await User.findOne({ username: process.env.ADMIN_USERNAME || 'admin' })
@@ -69,20 +72,27 @@ async function seedDatabase() {
       username: process.env.ADMIN_USERNAME || 'admin',
       password: process.env.ADMIN_PASSWORD || 'admin123',
     })
-    console.log(`✅ Admin user created — login: ${process.env.ADMIN_USERNAME || 'admin'} / ${process.env.ADMIN_PASSWORD || 'admin123'}`)
+    console.log(`✅ Admin user seeded`)
+  }
+
+  // Seed site content from siteContent.json if DB empty
+  const contentCount = await SiteContent.countDocuments()
+  if (contentCount === 0) {
+    await SiteContent.create(defaultContent)
+    console.log('✅ Site content seeded from config/siteContent.json')
   }
 
   // Seed profile
   const profileCount = await Profile.countDocuments()
   if (profileCount === 0) {
     await Profile.create({
-      name: 'Nguyen Anh Toan',
-      title: 'Full Stack Developer',
-      bio: 'Passionate Full Stack Developer with 3+ years building modern web applications. Specialized in React, Node.js, and MongoDB with a love for 3D web experiences.',
-      email: 'mranhtoandt@gmail.com',
-      github: 'https://github.com/anhtoandt',
-      linkedin: 'https://linkedin.com/in/anhtoandt',
-      twitter: 'https://twitter.com/anhtoandt',
+      name: defaultContent.hero.name,
+      title: defaultContent.hero.typingWords[0],
+      bio: defaultContent.about.paragraphs[0],
+      email: defaultContent.contact.email,
+      github: defaultContent.social.github,
+      linkedin: defaultContent.social.linkedin,
+      twitter: defaultContent.social.twitter,
       skills: [
         { name: 'React', level: 92, category: 'Frontend' },
         { name: 'Node.js', level: 88, category: 'Backend' },

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
+import { ContentProvider } from './context/ContentContext'
 import ProtectedRoute from './components/ProtectedRoute'
 
 // Portfolio
@@ -25,6 +26,7 @@ import SkillsManager from './pages/admin/SkillsManager'
 import ProjectsManager from './pages/admin/ProjectsManager'
 import ExperienceManager from './pages/admin/ExperienceManager'
 import MessagesView from './pages/admin/MessagesView'
+import ContentManager from './pages/admin/ContentManager'
 
 function Portfolio() {
   const [loading, setLoading] = useState(true)
@@ -57,6 +59,7 @@ function Portfolio() {
 export default function App() {
   return (
     <BrowserRouter>
+      <ContentProvider>
       <AuthProvider>
         <Toaster
           position="top-right"
@@ -94,9 +97,11 @@ export default function App() {
             <Route path="projects" element={<ProjectsManager />} />
             <Route path="experience" element={<ExperienceManager />} />
             <Route path="messages" element={<MessagesView />} />
+            <Route path="content" element={<ContentManager />} />
           </Route>
         </Routes>
       </AuthProvider>
+      </ContentProvider>
     </BrowserRouter>
   )
 }

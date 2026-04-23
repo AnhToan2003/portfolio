@@ -4,6 +4,7 @@ import { Float, Stars, MeshDistortMaterial, Sphere, Torus } from '@react-three/d
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { FiGithub, FiLinkedin, FiTwitter, FiArrowDown } from 'react-icons/fi'
 import * as THREE from 'three'
+import { useContent } from '../context/ContentContext'
 
 /* ── 3D Scene Objects ── */
 function DistortSphere({ position, color, scale = 1, speed = 1, distort = 0.4 }) {
@@ -15,15 +16,7 @@ function DistortSphere({ position, color, scale = 1, speed = 1, distort = 0.4 })
   return (
     <Float speed={2} rotationIntensity={0.5} floatIntensity={1.5}>
       <Sphere ref={mesh} args={[1, 80, 80]} scale={scale} position={position}>
-        <MeshDistortMaterial
-          color={color}
-          distort={distort}
-          speed={3}
-          roughness={0.1}
-          metalness={0.6}
-          transparent
-          opacity={0.85}
-        />
+        <MeshDistortMaterial color={color} distort={distort} speed={3} roughness={0.1} metalness={0.6} transparent opacity={0.85} />
       </Sphere>
     </Float>
   )
@@ -39,12 +32,7 @@ function WireframeTorus({ position, scale = 1 }) {
     <Float speed={1.5} floatIntensity={1}>
       <mesh ref={mesh} position={position} scale={scale}>
         <torusGeometry args={[1, 0.3, 16, 60]} />
-        <meshStandardMaterial
-          color="#7c3aed"
-          wireframe
-          transparent
-          opacity={0.35}
-        />
+        <meshStandardMaterial color="#7c3aed" wireframe transparent opacity={0.35} />
       </mesh>
     </Float>
   )
@@ -52,19 +40,13 @@ function WireframeTorus({ position, scale = 1 }) {
 
 function FloatingRings() {
   const group = useRef()
-  useFrame((s) => {
-    group.current.rotation.y = s.clock.elapsedTime * 0.08
-  })
+  useFrame((s) => { group.current.rotation.y = s.clock.elapsedTime * 0.08 })
   return (
     <group ref={group}>
       {[0, 1, 2].map((i) => (
         <mesh key={i} rotation={[Math.PI / 2, 0, (i * Math.PI) / 3]}>
           <torusGeometry args={[3 + i * 0.8, 0.015, 8, 100]} />
-          <meshStandardMaterial
-            color={i % 2 === 0 ? '#7c3aed' : '#06b6d4'}
-            transparent
-            opacity={0.2}
-          />
+          <meshStandardMaterial color={i % 2 === 0 ? '#7c3aed' : '#06b6d4'} transparent opacity={0.2} />
         </mesh>
       ))}
     </group>
@@ -80,11 +62,7 @@ function ParticleDots() {
     positions[i * 3 + 2] = (Math.random() - 0.5) * 10
   }
   const geo = useRef()
-  useFrame((s) => {
-    if (geo.current) {
-      geo.current.rotation.y = s.clock.elapsedTime * 0.02
-    }
-  })
+  useFrame((s) => { if (geo.current) geo.current.rotation.y = s.clock.elapsedTime * 0.02 })
   return (
     <points ref={geo}>
       <bufferGeometry>
@@ -114,13 +92,12 @@ function CameraController() {
   return null
 }
 
-/* ── Typing animation hook ── */
 function useTyping(words, speed = 100, pause = 1800) {
   const [displayed, setDisplayed] = useState('')
   const [index, setIndex] = useState(0)
   const [deleting, setDeleting] = useState(false)
-
   useEffect(() => {
+    if (!words?.length) return
     const word = words[index % words.length]
     let timer
     if (!deleting && displayed.length < word.length) {
@@ -129,50 +106,36 @@ function useTyping(words, speed = 100, pause = 1800) {
       timer = setTimeout(() => setDeleting(true), pause)
     } else if (deleting && displayed.length > 0) {
       timer = setTimeout(() => setDisplayed(displayed.slice(0, -1)), speed / 2)
-    } else if (deleting && displayed.length === 0) {
+    } else {
       setDeleting(false)
       setIndex((i) => i + 1)
     }
     return () => clearTimeout(timer)
   }, [displayed, deleting, index, words, speed, pause])
-
   return displayed
 }
 
-/* ── Hero Component ── */
 export default function Hero() {
+  const { content } = useContent()
+  const { hero, social, contact } = content
+
   const containerRef = useRef()
   const { scrollYProgress } = useScroll({ target: containerRef })
   const y = useTransform(scrollYProgress, [0, 1], ['0%', '30%'])
   const opacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
 
-  const typedText = useTyping([
-    'Full Stack Developer',
-    'React & Node.js Expert',
-    'UI/UX Enthusiast',
-    '3D Web Creator',
-  ])
+  const typedText = useTyping(hero.typingWords)
 
   const socials = [
-    { icon: FiGithub, href: 'https://github.com', label: 'GitHub' },
-    { icon: FiLinkedin, href: 'https://linkedin.com', label: 'LinkedIn' },
-    { icon: FiTwitter, href: 'https://twitter.com', label: 'Twitter' },
+    { icon: FiGithub, href: social.github, label: 'GitHub' },
+    { icon: FiLinkedin, href: social.linkedin, label: 'LinkedIn' },
+    { icon: FiTwitter, href: social.twitter, label: 'Twitter' },
   ]
 
   return (
-    <section
-      ref={containerRef}
-      id="home"
-      className="relative w-full min-h-screen flex items-center overflow-hidden bg-grid"
-      style={{ background: '#05050a' }}
-    >
-      {/* 3D Canvas */}
+    <section ref={containerRef} id="home" className="relative w-full min-h-screen flex items-center overflow-hidden bg-grid" style={{ background: '#05050a' }}>
       <div className="absolute inset-0 z-0">
-        <Canvas
-          camera={{ position: [0, 0, 6], fov: 60 }}
-          gl={{ antialias: true, alpha: true }}
-          style={{ background: 'transparent' }}
-        >
+        <Canvas camera={{ position: [0, 0, 6], fov: 60 }} gl={{ antialias: true, alpha: true }} style={{ background: 'transparent' }}>
           <Suspense fallback={null}>
             <CameraController />
             <ambientLight intensity={0.3} />
@@ -189,140 +152,74 @@ export default function Hero() {
           </Suspense>
         </Canvas>
       </div>
+      <div className="absolute inset-0 z-10 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 50%, transparent 30%, rgba(5,5,10,0.7) 100%)' }} />
+      <div className="absolute bottom-0 left-0 right-0 h-40 z-10 pointer-events-none" style={{ background: 'linear-gradient(to top, #05050a, transparent)' }} />
 
-      {/* Gradient overlays */}
-      <div className="absolute inset-0 z-10 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 50%, transparent 30%, rgba(5,5,10,0.7) 100%)' }} />
-      <div className="absolute bottom-0 left-0 right-0 h-40 z-10 pointer-events-none"
-        style={{ background: 'linear-gradient(to top, #05050a, transparent)' }} />
-
-      {/* Content */}
-      <motion.div
-        style={{ y, opacity }}
-        className="relative z-20 max-w-6xl mx-auto px-6 pt-24 pb-16 w-full"
-      >
+      <motion.div style={{ y, opacity }} className="relative z-20 max-w-6xl mx-auto px-6 pt-24 pb-16 w-full">
         <div className="max-w-3xl">
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 border border-purple-600/20"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 border border-purple-600/20">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-slate-300 text-sm font-inter">Available for opportunities</span>
+            <span className="text-slate-300 text-sm font-inter">{hero.badge}</span>
           </motion.div>
 
-          {/* Main heading */}
-          <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.7 }}
-            className="font-grotesk font-bold leading-tight mb-4"
-            style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)' }}
-          >
-            Hi, I'm{' '}
-            <span className="gradient-text text-glow">Anh Toan</span>
+          <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.7 }}
+            className="font-grotesk font-bold leading-tight mb-4" style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)' }}>
+            {hero.greeting}{' '}
+            <span className="gradient-text text-glow">{hero.name}</span>
             <br />
             <span className="text-slate-200">Developer &</span>
             <br />
             <span className="text-slate-400">Creator</span>
           </motion.h1>
 
-          {/* Typing text */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-            className="flex items-center gap-2 mb-6"
-          >
-            <span className="font-grotesk font-medium text-xl md:text-2xl text-slate-300">
-              {typedText}
-            </span>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.6 }}
+            className="flex items-center gap-2 mb-6">
+            <span className="font-grotesk font-medium text-xl md:text-2xl text-slate-300">{typedText}</span>
             <span className="w-0.5 h-7 bg-purple-500 typing-cursor" />
           </motion.div>
 
-          {/* Description */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.6 }}
-            className="font-inter text-slate-400 text-lg leading-relaxed max-w-xl mb-10"
-          >
-            I craft beautiful, high-performance web experiences using modern technologies.
-            Passionate about turning ideas into{' '}
-            <span className="text-purple-400">stunning digital realities</span>.
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.6 }}
+            className="font-inter text-slate-400 text-lg leading-relaxed max-w-xl mb-10">
+            {hero.description}
           </motion.p>
 
-          {/* CTA buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.75, duration: 0.6 }}
-            className="flex flex-wrap gap-4 mb-12"
-          >
-            <motion.button
-              whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(124,58,237,0.4)' }}
-              whileTap={{ scale: 0.95 }}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.75, duration: 0.6 }}
+            className="flex flex-wrap gap-4 mb-12">
+            <motion.button whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(124,58,237,0.4)' }} whileTap={{ scale: 0.95 }}
               onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })}
               className="px-8 py-4 rounded-full font-grotesk font-medium text-white text-base"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #06b6d4)' }}
-            >
-              View My Work
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #06b6d4)' }}>
+              {hero.cta?.primary}
             </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05, borderColor: '#7c3aed', color: 'white' }}
-              whileTap={{ scale: 0.95 }}
+            <motion.button whileHover={{ scale: 1.05, borderColor: '#7c3aed', color: 'white' }} whileTap={{ scale: 0.95 }}
               onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-              className="px-8 py-4 rounded-full font-grotesk font-medium text-purple-400 border border-purple-600/50 transition-colors"
-            >
-              Contact Me
+              className="px-8 py-4 rounded-full font-grotesk font-medium text-purple-400 border border-purple-600/50 transition-colors">
+              {hero.cta?.secondary}
             </motion.button>
           </motion.div>
 
-          {/* Social links */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.9, duration: 0.6 }}
-            className="flex items-center gap-5"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.6 }}
+            className="flex items-center gap-5">
             {socials.map(({ icon: Icon, href, label }, i) => (
-              <motion.a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={label}
-                whileHover={{ scale: 1.2, color: '#a78bfa' }}
-                whileTap={{ scale: 0.9 }}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
+              <motion.a key={label} href={href} target="_blank" rel="noreferrer" aria-label={label}
+                whileHover={{ scale: 1.2, color: '#a78bfa' }} whileTap={{ scale: 0.9 }}
+                initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.9 + i * 0.1 }}
-                className="text-slate-500 hover:text-purple-400 transition-colors text-xl"
-              >
+                className="text-slate-500 hover:text-purple-400 transition-colors text-xl">
                 <Icon />
               </motion.a>
             ))}
             <div className="h-px w-12 ml-2" style={{ background: 'rgba(255,255,255,0.1)' }} />
-            <span className="text-slate-600 text-xs font-inter">mranhtoandt@gmail.com</span>
+            <span className="text-slate-600 text-xs font-inter">{contact?.email}</span>
           </motion.div>
         </div>
       </motion.div>
 
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.5 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2"
-      >
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
         <span className="text-slate-600 text-xs font-inter tracking-widest uppercase">Scroll</span>
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          className="text-slate-600"
-        >
+        <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }} className="text-slate-600">
           <FiArrowDown size={18} />
         </motion.div>
       </motion.div>

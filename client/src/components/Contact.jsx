@@ -2,22 +2,26 @@ import { useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { FiSend, FiMail, FiMapPin, FiPhone, FiGithub, FiLinkedin, FiTwitter, FiCheck } from 'react-icons/fi'
 import axios from 'axios'
-
-const contactInfo = [
-  { icon: FiMail, label: 'Email', value: 'mranhtoandt@gmail.com', href: 'mailto:mranhtoandt@gmail.com' },
-  { icon: FiMapPin, label: 'Location', value: 'Ho Chi Minh City, Vietnam', href: '#' },
-  { icon: FiPhone, label: 'Phone', value: '+84 xxx xxx xxx', href: 'tel:+84xxxxxxxxx' },
-]
-
-const socials = [
-  { icon: FiGithub, href: 'https://github.com', label: 'GitHub', color: '#ffffff' },
-  { icon: FiLinkedin, href: 'https://linkedin.com', label: 'LinkedIn', color: '#0a66c2' },
-  { icon: FiTwitter, href: 'https://twitter.com', label: 'Twitter', color: '#1da1f2' },
-]
+import { useContent } from '../context/ContentContext'
 
 const inputClass = 'input-field'
 
 export default function Contact() {
+  const { content } = useContent()
+  const { contact, social } = content
+
+  const contactInfo = [
+    { icon: FiMail, label: 'Email', value: contact.email, href: `mailto:${contact.email}` },
+    { icon: FiMapPin, label: 'Location', value: contact.location, href: '#' },
+    { icon: FiPhone, label: 'Phone', value: contact.phone, href: `tel:${contact.phone}` },
+  ]
+
+  const socials = [
+    { icon: FiGithub, href: social.github, label: 'GitHub' },
+    { icon: FiLinkedin, href: social.linkedin, label: 'LinkedIn' },
+    { icon: FiTwitter, href: social.twitter, label: 'Twitter' },
+  ]
+
   const sectionRef = useRef()
   const inView = useInView(sectionRef, { once: true, margin: '-80px' })
 
