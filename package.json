@@ -6,9 +6,10 @@
     "dev": "concurrently --names \"SERVER,CLIENT\" --prefix-colors \"magenta,cyan\" \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "start": "concurrently --names \"SERVER,CLIENT\" --prefix-colors \"magenta,cyan\" \"npm start --prefix server\" \"npm run preview --prefix client\"",
     "install:all": "npm install && npm install --prefix server && npm install --prefix client",
-    "build": "npm run build --prefix client"
+    "build": "npm install --prefix client && npm run build --prefix client"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "vite": "^8.0.10"
   }
 }
