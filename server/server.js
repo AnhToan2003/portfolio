@@ -41,6 +41,10 @@ app.use('/api/experience', require('./routes/experience'))
 app.use('/api/contact', require('./routes/contact'))
 app.use('/api/upload', require('./routes/upload'))
 
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', message: 'Portfolio API is running', docs: '/api/health' })
+})
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() })
 })
