@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { FiSend, FiMail, FiMapPin, FiPhone, FiGithub, FiLinkedin, FiTwitter, FiCheck } from 'react-icons/fi'
-import axios from 'axios'
 import { useContent } from '../context/ContentContext'
+import api from '../utils/api'
 
 const inputClass = 'input-field'
 
@@ -37,7 +37,7 @@ export default function Contact() {
     if (!form.name || !form.email || !form.message) return
     setStatus('loading')
     try {
-      await axios.post('/api/contact', form)
+      await api.post('/api/contact', form)
       setStatus('success')
       setForm({ name: '', email: '', subject: '', message: '' })
       setTimeout(() => setStatus('idle'), 5000)
@@ -63,13 +63,13 @@ export default function Contact() {
           className="mb-14 text-center"
         >
           <p className="font-inter text-purple-400 text-sm font-medium tracking-widest uppercase mb-3">
-            05 — Contact
+            {contact.sectionLabel}
           </p>
           <h2 className="font-grotesk font-bold text-4xl md:text-5xl mb-4">
-            Let's <span className="gradient-text">Work Together</span>
+            {contact.heading} <span className="gradient-text">{contact.headingAccent}</span>
           </h2>
           <p className="font-inter text-slate-500 text-base max-w-lg mx-auto">
-            Have a project in mind? I'd love to hear about it. Send me a message and let's create something amazing.
+            {contact.description}
           </p>
         </motion.div>
 
