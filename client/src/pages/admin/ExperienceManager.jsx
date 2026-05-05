@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
-import api from '../../utils/api'
+import {
+  getExperience,
+  createExperience, updateExperience, deleteExperience,
+  createEducation, updateEducation, deleteEducation,
+} from '../../services/experienceService'
 import toast from 'react-hot-toast'
 import { FiPlus, FiEdit2, FiTrash2, FiCheck, FiX, FiBriefcase, FiBook } from 'react-icons/fi'
 
@@ -114,10 +118,10 @@ export default function ExperienceManager() {
   const [addingEdu, setAddingEdu] = useState(false)
 
   useEffect(() => {
-    api.get('/api/experience')
-      .then((res) => {
-        setExperience(res.data.data.experience || [])
-        setEducation(res.data.data.education || [])
+    getExperience()
+      .then((data) => {
+        setExperience(data.experience || [])
+        setEducation(data.education || [])
       })
       .catch(() => toast.error('Failed to load entries'))
       .finally(() => setLoading(false))
@@ -125,8 +129,8 @@ export default function ExperienceManager() {
 
   async function addExp(form) {
     try {
-      const res = await api.post('/api/experience', form)
-      setExperience((e) => [...e, res.data.data])
+      const entry = await createExperience(form)
+      setExperience((e) => [...e, entry])
       setAddingExp(false)
       toast.success('Experience added')
     } catch { toast.error('Failed to add') }
@@ -134,36 +138,36 @@ export default function ExperienceManager() {
 
   async function addEdu(form) {
     try {
-      const res = await api.post('/api/experience/education', form)
-      setEducation((e) => [...e, res.data.data])
+      const entry = await createEducation(form)
+      setEducation((e) => [...e, entry])
       setAddingEdu(false)
       toast.success('Education added')
     } catch { toast.error('Failed to add') }
   }
 
   async function saveExp(id, form) {
-    const res = await api.put(`/api/experience/${id}`, form)
-    setExperience((e) => e.map((x) => x._id === id ? res.data.data : x))
+    const entry = await updateExperience(id, form)
+    setExperience((e) => e.map((x) => x._id === id ? entry : x))
   }
 
   async function saveEdu(id, form) {
-    const res = await api.put(`/api/experience/education/${id}`, form)
-    setEducation((e) => e.map((x) => x._id === id ? res.data.data : x))
+    const entry = await updateEducation(id, form)
+    setEducation((e) => e.map((x) => x._id === id ? entry : x))
   }
 
-  async function deleteExp(id) {
+  async function delExp(id) {
     if (!confirm('Delete this entry?')) return
     try {
-      await api.delete(`/api/experience/${id}`)
+      await deleteExperience(id)
       setExperience((e) => e.filter((x) => x._id !== id))
       toast.success('Deleted')
     } catch { toast.error('Delete failed') }
   }
 
-  async function deleteEdu(id) {
+  async function delEdu(id) {
     if (!confirm('Delete this entry?')) return
     try {
-      await api.delete(`/api/experience/education/${id}`)
+      await deleteEducation(id)
       setEducation((e) => e.filter((x) => x._id !== id))
       toast.success('Deleted')
     } catch { toast.error('Delete failed') }
@@ -204,7 +208,7 @@ export default function ExperienceManager() {
         ) : (
           <div className="space-y-2">
             {experience.map((e) => (
-              <EntryCard key={e._id} entry={e} fields={expFields} onSave={saveExp} onDelete={deleteExp} />
+              <EntryCard key={e._id} entry={e} fields={expFields} onSave={saveExp} onDelete={delExp} />
             ))}
           </div>
         )}
@@ -234,7 +238,7 @@ export default function ExperienceManager() {
         ) : (
           <div className="space-y-2">
             {education.map((e) => (
-              <EntryCard key={e._id} entry={e} fields={eduFields} onSave={saveEdu} onDelete={deleteEdu} />
+              <EntryCard key={e._id} entry={e} fields={eduFields} onSave={saveEdu} onDelete={delEdu} />
             ))}
           </div>
         )}

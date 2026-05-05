@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import api from '../../utils/api'
+import { getProfile, updateProfile, uploadAvatar } from '../../services/profileService'
 import toast from 'react-hot-toast'
 import { FiSave, FiUpload, FiUser, FiGithub, FiLinkedin, FiMail, FiTwitter, FiLink } from 'react-icons/fi'
 
@@ -16,14 +16,16 @@ export default function ProfileEdit() {
   const fileRef = useRef()
 
   useEffect(() => {
-    api.get('/api/profile').then((res) => {
-      const d = res.data.data
-      setForm({
-        name: d.name || '', title: d.title || '', bio: d.bio || '',
-        email: d.email || '', github: d.github || '', linkedin: d.linkedin || '',
-        twitter: d.twitter || '', resume: d.resume || '', avatar: d.avatar || '',
+    getProfile()
+      .then((d) => {
+        setForm({
+          name: d.name || '', title: d.title || '', bio: d.bio || '',
+          email: d.email || '', github: d.github || '', linkedin: d.linkedin || '',
+          twitter: d.twitter || '', resume: d.resume || '', avatar: d.avatar || '',
+        })
       })
-    }).catch(() => toast.error('Failed to load profile')).finally(() => setLoading(false))
+      .catch(() => toast.error('Failed to load profile'))
+      .finally(() => setLoading(false))
   }, [])
 
   function set(field) {
@@ -33,12 +35,10 @@ export default function ProfileEdit() {
   async function handleAvatarUpload(e) {
     const file = e.target.files?.[0]
     if (!file) return
-    const data = new FormData()
-    data.append('image', file)
     setUploading(true)
     try {
-      const res = await api.post('/api/upload', data, { headers: { 'Content-Type': 'multipart/form-data' } })
-      setForm((f) => ({ ...f, avatar: res.data.url }))
+      const url = await uploadAvatar(file)
+      setForm((f) => ({ ...f, avatar: url }))
       toast.success('Image uploaded')
     } catch {
       toast.error('Upload failed')
@@ -52,7 +52,7 @@ export default function ProfileEdit() {
     if (!form.name.trim()) { toast.error('Name is required'); return }
     setSaving(true)
     try {
-      await api.put('/api/profile', form)
+      await updateProfile(form)
       toast.success('Profile updated!')
     } catch (err) {
       toast.error(err.response?.data?.error || 'Save failed')
@@ -179,7 +179,6 @@ export default function ProfileEdit() {
           </div>
         </div>
 
-        {/* Save */}
         <div className="flex justify-end">
           <button
             type="submit"

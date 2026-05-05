@@ -1,11 +1,10 @@
 import { useEffect, useState, useRef } from 'react'
-import api from '../../utils/api'
+import { getProjects, createProject, updateProject, deleteProject, uploadProjectImage } from '../../services/projectService'
 import toast from 'react-hot-toast'
 import { FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiUpload, FiGithub, FiExternalLink, FiStar, FiFolder } from 'react-icons/fi'
 
 const BASE = import.meta.env.VITE_API_URL || ''
 const CATEGORIES = ['Full Stack', 'Frontend', 'Backend', 'Mobile', 'AI/ML', 'DevOps', 'Other']
-
 const emptyForm = { title: '', description: '', tech: '', github: '', demo: '', category: 'Full Stack', featured: false, image: '' }
 
 function Modal({ title, onClose, children }) {
@@ -36,12 +35,10 @@ function ProjectForm({ initial = emptyForm, onSubmit, onClose, submitLabel = 'Sa
   async function handleImageUpload(e) {
     const file = e.target.files?.[0]
     if (!file) return
-    const data = new FormData()
-    data.append('image', file)
     setUploading(true)
     try {
-      const res = await api.post('/api/upload', data, { headers: { 'Content-Type': 'multipart/form-data' } })
-      setForm((f) => ({ ...f, image: res.data.url }))
+      const url = await uploadProjectImage(file)
+      setForm((f) => ({ ...f, image: url }))
       toast.success('Image uploaded')
     } catch {
       toast.error('Upload failed')
@@ -163,28 +160,28 @@ export default function ProjectsManager() {
   const [editing, setEditing] = useState(null)
 
   useEffect(() => {
-    api.get('/api/projects')
-      .then((res) => setProjects(res.data.data))
+    getProjects()
+      .then(setProjects)
       .catch(() => toast.error('Failed to load projects'))
       .finally(() => setLoading(false))
   }, [])
 
   async function handleAdd(payload) {
-    const res = await api.post('/api/projects', payload)
-    setProjects((p) => [res.data.data, ...p])
+    const project = await createProject(payload)
+    setProjects((p) => [project, ...p])
     toast.success('Project added!')
   }
 
   async function handleEdit(payload) {
-    const res = await api.put(`/api/projects/${editing._id}`, payload)
-    setProjects((p) => p.map((pr) => pr._id === editing._id ? res.data.data : pr))
+    const project = await updateProject(editing._id, payload)
+    setProjects((p) => p.map((pr) => pr._id === editing._id ? project : pr))
     toast.success('Project updated!')
   }
 
   async function handleDelete(id) {
     if (!confirm('Delete this project?')) return
     try {
-      await api.delete(`/api/projects/${id}`)
+      await deleteProject(id)
       setProjects((p) => p.filter((pr) => pr._id !== id))
       toast.success('Project deleted')
     } catch {
@@ -218,7 +215,6 @@ export default function ProjectsManager() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {projects.map((project) => (
             <div key={project._id} className="glass rounded-2xl border border-white/5 hover:border-white/10 transition-all overflow-hidden flex flex-col">
-              {/* Image */}
               <div className="h-40 bg-gradient-to-br from-purple-900/30 to-cyan-900/30 relative overflow-hidden">
                 {project.image ? (
                   <img
@@ -238,7 +234,6 @@ export default function ProjectsManager() {
                 )}
               </div>
 
-              {/* Content */}
               <div className="p-4 flex flex-col flex-1">
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <h3 className="text-white font-semibold text-sm leading-tight">{project.title}</h3>
@@ -246,7 +241,6 @@ export default function ProjectsManager() {
                 </div>
                 <p className="text-gray-400 text-xs leading-relaxed line-clamp-2 flex-1">{project.description}</p>
 
-                {/* Tech tags */}
                 {project.tech?.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
                     {project.tech.slice(0, 4).map((t) => (
@@ -256,7 +250,6 @@ export default function ProjectsManager() {
                   </div>
                 )}
 
-                {/* Actions */}
                 <div className="flex gap-2 mt-3 pt-3 border-t border-white/5">
                   <button onClick={() => setEditing(project)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 text-xs transition-all flex-1 justify-center">
@@ -273,14 +266,12 @@ export default function ProjectsManager() {
         </div>
       )}
 
-      {/* Add Modal */}
       {showAdd && (
         <Modal title="Add New Project" onClose={() => setShowAdd(false)}>
           <ProjectForm onSubmit={handleAdd} onClose={() => setShowAdd(false)} submitLabel="Add Project" />
         </Modal>
       )}
 
-      {/* Edit Modal */}
       {editing && (
         <Modal title="Edit Project" onClose={() => setEditing(null)}>
           <ProjectForm initial={editing} onSubmit={handleEdit} onClose={() => setEditing(null)} submitLabel="Update Project" />

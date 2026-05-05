@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { FiSend, FiMail, FiMapPin, FiPhone, FiGithub, FiLinkedin, FiTwitter, FiCheck } from 'react-icons/fi'
 import { useContent } from '../context/ContentContext'
-import api from '../utils/api'
+import { sendMessage } from '../services/contactService'
 
 const inputClass = 'input-field'
 
@@ -37,7 +37,7 @@ export default function Contact() {
     if (!form.name || !form.email || !form.message) return
     setStatus('loading')
     try {
-      await api.post('/api/contact', form)
+      await sendMessage(form)
       setStatus('success')
       setForm({ name: '', email: '', subject: '', message: '' })
       setTimeout(() => setStatus('idle'), 5000)

@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import api from '../../utils/api'
+import { getSkills, createSkill, updateSkill, deleteSkill } from '../../services/skillService'
 import toast from 'react-hot-toast'
 import { FiPlus, FiEdit2, FiTrash2, FiCheck, FiX } from 'react-icons/fi'
 
 const CATEGORIES = ['Frontend', 'Backend', 'DevOps', 'Design', 'Other']
-
 const empty = { name: '', level: 80, category: 'Frontend' }
 
 function SkillRow({ skill, onSave, onDelete }) {
@@ -16,8 +15,8 @@ function SkillRow({ skill, onSave, onDelete }) {
     if (!form.name.trim()) { toast.error('Skill name required'); return }
     setSaving(true)
     try {
-      const res = await api.put(`/api/skills/${skill._id}`, form)
-      onSave(res.data.data)
+      const updated = await updateSkill(skill._id, form)
+      onSave(updated)
       setEditing(false)
       toast.success('Skill updated')
     } catch {
@@ -114,8 +113,8 @@ function AddForm({ onAdd }) {
     if (!form.name.trim()) { toast.error('Skill name required'); return }
     setSaving(true)
     try {
-      const res = await api.post('/api/skills', form)
-      onAdd(res.data.data)
+      const skill = await createSkill(form)
+      onAdd(skill)
       setForm(empty)
       toast.success('Skill added')
     } catch {
@@ -166,8 +165,8 @@ export default function SkillsManager() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get('/api/skills')
-      .then((res) => setSkills(res.data.data))
+    getSkills()
+      .then(setSkills)
       .catch(() => toast.error('Failed to load skills'))
       .finally(() => setLoading(false))
   }, [])
@@ -178,7 +177,7 @@ export default function SkillsManager() {
   async function handleDelete(id) {
     if (!confirm('Delete this skill?')) return
     try {
-      await api.delete(`/api/skills/${id}`)
+      await deleteSkill(id)
       setSkills((s) => s.filter((sk) => sk._id !== id))
       toast.success('Skill deleted')
     } catch {

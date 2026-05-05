@@ -1,9 +1,10 @@
 const express = require('express')
 const router = express.Router()
 const auth = require('../middleware/auth')
+const rateLimiter = require('../middleware/rateLimiter')
 const { createMessage, getMessages, markRead, deleteMessage } = require('../controllers/contactController')
 
-router.post('/', createMessage)
+router.post('/', rateLimiter({ windowMs: 60_000, max: 5 }), createMessage)
 router.get('/', auth, getMessages)
 router.patch('/:id/read', auth, markRead)
 router.delete('/:id', auth, deleteMessage)

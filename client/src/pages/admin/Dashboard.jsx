@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import api from '../../utils/api'
+import { getProjects } from '../../services/projectService'
+import { getSkills } from '../../services/skillService'
+import { getExperience } from '../../services/experienceService'
+import { getMessages } from '../../services/contactService'
 import { FiFolder, FiCode, FiBriefcase, FiMail, FiArrowRight } from 'react-icons/fi'
 
 function StatCard({ icon: Icon, label, value, color, to }) {
@@ -25,19 +28,19 @@ export default function Dashboard() {
 
   useEffect(() => {
     Promise.allSettled([
-      api.get('/api/projects'),
-      api.get('/api/skills'),
-      api.get('/api/experience'),
-      api.get('/api/contact'),
+      getProjects(),
+      getSkills(),
+      getExperience(),
+      getMessages(),
     ]).then(([p, s, e, m]) => {
       setStats({
-        projects: p.status === 'fulfilled' ? p.value.data.data.length : 0,
-        skills: s.status === 'fulfilled' ? s.value.data.data.length : 0,
+        projects: p.status === 'fulfilled' ? p.value.length : 0,
+        skills: s.status === 'fulfilled' ? s.value.length : 0,
         experience:
           e.status === 'fulfilled'
-            ? (e.value.data.data.experience?.length || 0) + (e.value.data.data.education?.length || 0)
+            ? (e.value.experience?.length || 0) + (e.value.education?.length || 0)
             : 0,
-        messages: m.status === 'fulfilled' ? m.value.data.count : 0,
+        messages: m.status === 'fulfilled' ? m.value.count : 0,
       })
     })
   }, [])
@@ -51,20 +54,17 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <p className="text-gray-400 mt-1">Overview of your portfolio content</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {cards.map((c) => (
           <StatCard key={c.label} {...c} />
         ))}
       </div>
 
-      {/* Quick actions */}
       <div>
         <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

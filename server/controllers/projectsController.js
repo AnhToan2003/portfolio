@@ -1,10 +1,9 @@
-const Project = require('../models/Project')
+const projectService = require('../services/projectService')
 
 exports.getProjects = async (req, res) => {
   try {
-    const { featured } = req.query
-    const filter = featured ? { featured: true } : {}
-    const projects = await Project.find(filter).sort({ order: 1, createdAt: -1 })
+    const filter = req.query.featured ? { featured: true } : {}
+    const projects = await projectService.getProjects(filter)
     res.json({ success: true, data: projects })
   } catch (err) {
     res.status(500).json({ success: false, error: err.message })
@@ -13,7 +12,7 @@ exports.getProjects = async (req, res) => {
 
 exports.getProjectById = async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id)
+    const project = await projectService.getProjectById(req.params.id)
     if (!project) return res.status(404).json({ success: false, error: 'Project not found' })
     res.json({ success: true, data: project })
   } catch (err) {
@@ -23,7 +22,7 @@ exports.getProjectById = async (req, res) => {
 
 exports.createProject = async (req, res) => {
   try {
-    const project = await Project.create(req.body)
+    const project = await projectService.createProject(req.body)
     res.status(201).json({ success: true, data: project })
   } catch (err) {
     res.status(400).json({ success: false, error: err.message })
@@ -32,10 +31,7 @@ exports.createProject = async (req, res) => {
 
 exports.updateProject = async (req, res) => {
   try {
-    const project = await Project.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    })
+    const project = await projectService.updateProject(req.params.id, req.body)
     if (!project) return res.status(404).json({ success: false, error: 'Project not found' })
     res.json({ success: true, data: project })
   } catch (err) {
@@ -45,7 +41,7 @@ exports.updateProject = async (req, res) => {
 
 exports.deleteProject = async (req, res) => {
   try {
-    const project = await Project.findByIdAndDelete(req.params.id)
+    const project = await projectService.deleteProject(req.params.id)
     if (!project) return res.status(404).json({ success: false, error: 'Project not found' })
     res.json({ success: true, message: 'Project deleted' })
   } catch (err) {

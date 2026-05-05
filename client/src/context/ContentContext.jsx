@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import api from '../utils/api'
+import { getContent } from '../services/contentService'
 
 // Default fallback so components never render empty strings
 const DEFAULT = {
@@ -88,17 +88,13 @@ export function ContentProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api
-      .get('/api/content')
-      .then((res) => {
-        if (res.data?.data) {
-          // Deep merge with DEFAULT so missing fields never break components
-          setContent((prev) => deepMerge(prev, res.data.data))
+    getContent()
+      .then((data) => {
+        if (data) {
+          setContent((prev) => deepMerge(prev, data))
         }
       })
-      .catch(() => {
-        // Silently fall back to DEFAULT — site always works
-      })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 

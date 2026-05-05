@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useContent } from '../../context/ContentContext'
-import api from '../../utils/api'
+import { updateContent } from '../../services/contentService'
 import toast from 'react-hot-toast'
 import { FiSave, FiRefreshCw } from 'react-icons/fi'
 
@@ -55,11 +55,9 @@ export default function ContentManager() {
   async function handleSave() {
     setSaving(true)
     try {
-      const res = await api.put('/api/content', form)
-      if (res.data?.data) {
-        setContent(res.data.data)
-        setForm(JSON.parse(JSON.stringify(res.data.data)))
-      }
+      const saved = await updateContent(form)
+      setContent(saved)
+      setForm(JSON.parse(JSON.stringify(saved)))
       toast.success('Content saved successfully')
     } catch {
       toast.error('Failed to save content')

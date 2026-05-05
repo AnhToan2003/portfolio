@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import api from '../../utils/api'
+import { getMessages, markRead, deleteMessage } from '../../services/contactService'
 import toast from 'react-hot-toast'
 import { FiMail, FiTrash2, FiCheck, FiInbox } from 'react-icons/fi'
 
@@ -13,15 +13,15 @@ export default function MessagesView() {
   const [selected, setSelected] = useState(null)
 
   useEffect(() => {
-    api.get('/api/contact')
-      .then((res) => setMessages(res.data.data))
+    getMessages()
+      .then((data) => setMessages(data.data))
       .catch(() => toast.error('Failed to load messages'))
       .finally(() => setLoading(false))
   }, [])
 
-  async function markRead(id) {
+  async function handleMarkRead(id) {
     try {
-      await api.patch(`/api/contact/${id}/read`)
+      await markRead(id)
       setMessages((m) => m.map((msg) => msg._id === id ? { ...msg, read: true } : msg))
       if (selected?._id === id) setSelected((s) => ({ ...s, read: true }))
     } catch {
@@ -32,7 +32,7 @@ export default function MessagesView() {
   async function handleDelete(id) {
     if (!confirm('Delete this message?')) return
     try {
-      await api.delete(`/api/contact/${id}`)
+      await deleteMessage(id)
       setMessages((m) => m.filter((msg) => msg._id !== id))
       if (selected?._id === id) setSelected(null)
       toast.success('Message deleted')
@@ -43,7 +43,7 @@ export default function MessagesView() {
 
   function openMessage(msg) {
     setSelected(msg)
-    if (!msg.read) markRead(msg._id)
+    if (!msg.read) handleMarkRead(msg._id)
   }
 
   const unread = messages.filter((m) => !m.read).length
@@ -107,7 +107,6 @@ export default function MessagesView() {
           <div className="flex-1 hidden lg:flex">
             {selected ? (
               <div className="glass rounded-2xl border border-white/5 p-6 flex flex-col w-full overflow-y-auto">
-                {/* Header */}
                 <div className="flex items-start justify-between gap-4 mb-6">
                   <div>
                     <h2 className="text-white font-bold text-lg">{selected.subject || '(No subject)'}</h2>
@@ -125,7 +124,7 @@ export default function MessagesView() {
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
                     {!selected.read && (
-                      <button onClick={() => markRead(selected._id)}
+                      <button onClick={() => handleMarkRead(selected._id)}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 text-xs transition-all">
                         <FiCheck className="w-3.5 h-3.5" /> Mark read
                       </button>
