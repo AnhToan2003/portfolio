@@ -2,6 +2,15 @@ const contactService = require('../services/contactService')
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+}
+
 exports.createMessage = async (req, res) => {
   try {
     const { name, email, subject, message } = req.body
@@ -11,7 +20,12 @@ exports.createMessage = async (req, res) => {
     if (!EMAIL_RE.test(email))
       return res.status(400).json({ success: false, error: 'Invalid email address.' })
 
-    const contact = await contactService.createMessage({ name, email, subject, message })
+    const contact = await contactService.createMessage({
+      name: escapeHtml(name),
+      email,
+      subject: subject ? escapeHtml(subject) : subject,
+      message: escapeHtml(message),
+    })
     res.status(201).json({ success: true, message: 'Message received! I will reply soon.', id: contact._id })
   } catch {
     res.status(500).json({ success: false, error: 'Server error. Please try again.' })

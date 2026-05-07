@@ -10,6 +10,7 @@ const profileSchema = new mongoose.Schema(
     linkedin: { type: String },
     twitter: { type: String },
     avatar: { type: String },
+    resume: { type: String },
     skills: [
       {
         name: String,
