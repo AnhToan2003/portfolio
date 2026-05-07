@@ -1,3 +1,4 @@
+// server/server.js
 const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
@@ -25,14 +26,32 @@ app.use(helmet())
 app.use(mongoSanitize())
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+const allowedOrigins = (
+  process.env.CLIENT_URL ||
+  process.env.FRONTEND_URL ||
+  'http://localhost:5173'
+)
   .split(',')
-  .map((o) => o.trim())
+  .map((o) => o.trim().replace(/\/$/, '')) // bỏ dấu / cuối nếu có
+
+// Regex cho Vercel preview deployments (anhtoan-portfolio-*.vercel.app)
+const vercelPreviewRegex = /^https:\/\/anhtoan-portfolio.*\.vercel\.app$/
 
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true)
+      // Cho phép request không có origin (Postman, curl, health check)
+      if (!origin) return cb(null, true)
+
+      const normalizedOrigin = origin.replace(/\/$/, '')
+
+      if (
+        allowedOrigins.includes(normalizedOrigin) ||
+        vercelPreviewRegex.test(normalizedOrigin)
+      ) {
+        return cb(null, true)
+      }
+
       cb(new Error(`CORS: origin ${origin} not allowed`))
     },
     credentials: true,
