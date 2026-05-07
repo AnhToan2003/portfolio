@@ -1,12 +1,15 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
+const helmet = require('helmet')
+const cookieParser = require('cookie-parser')
+const mongoSanitize = require('express-mongo-sanitize')
 const path = require('path')
 const fs = require('fs')
 require('dotenv').config()
 
 // ─── ENV VALIDATION ──────────────────────────────────────────────────────────
-const REQUIRED_ENV = ['JWT_SECRET', 'ADMIN_PASSWORD']
+const REQUIRED_ENV = ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'ADMIN_PASSWORD']
 const missingEnv = REQUIRED_ENV.filter((k) => !process.env[k])
 if (missingEnv.length) {
   console.error(`❌ Missing required environment variables: ${missingEnv.join(', ')}`)
@@ -16,6 +19,10 @@ if (missingEnv.length) {
 
 const app = express()
 const PORT = process.env.PORT || 5000
+
+// ─── SECURITY MIDDLEWARE ──────────────────────────────────────────────────────
+app.use(helmet())
+app.use(mongoSanitize())
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
 const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
@@ -32,6 +39,7 @@ app.use(
   })
 )
 
+app.use(cookieParser())
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true }))
 
@@ -51,7 +59,7 @@ app.use('/api/contact', require('./routes/contact'))
 app.use('/api/upload', require('./routes/upload'))
 
 app.get('/', (req, res) => {
-  res.json({ status: 'ok', message: 'Portfolio API is running', docs: '/api/health' })
+  res.json({ status: 'ok', message: 'Portfolio API is running' })
 })
 
 app.get('/api/health', (req, res) => {
@@ -69,7 +77,7 @@ mongoose
     )
     server.on('error', (err) => {
       if (err.code === 'EADDRINUSE') {
-        console.error(`❌ Port ${PORT} is already in use. Kill the other process and restart.`)
+        console.error(`❌ Port ${PORT} is already in use.`)
         process.exit(1)
       } else {
         throw err
@@ -88,21 +96,24 @@ async function seedDatabase() {
   const SiteContent = require('./models/SiteContent')
   const defaultContent = require('./config/siteContent.json')
 
-  // Seed admin user
-  const adminExists = await User.findOne({ username: process.env.ADMIN_USERNAME || 'admin' })
+  // Seed admin user (email-based)
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@portfolio.local'
+  const adminExists = await User.findOne({ email: adminEmail })
   if (!adminExists) {
     await User.create({
-      username: process.env.ADMIN_USERNAME || 'admin',
+      email: adminEmail,
       password: process.env.ADMIN_PASSWORD,
+      name: 'Admin',
+      mustChangePassword: false,
     })
-    console.log(`✅ Admin user seeded`)
+    console.log(`✅ Admin user seeded (${adminEmail})`)
   }
 
-  // Seed site content from siteContent.json if DB empty
+  // Seed site content
   const contentCount = await SiteContent.countDocuments()
   if (contentCount === 0) {
     await SiteContent.create(defaultContent)
-    console.log('✅ Site content seeded from config/siteContent.json')
+    console.log('✅ Site content seeded')
   }
 
   // Seed profile
@@ -131,12 +142,6 @@ async function seedDatabase() {
           period: '2023 – Present',
           description: 'Lead development of AI-powered SaaS platform serving 50K+ users.',
         },
-        {
-          company: 'DigitalCraft Studio',
-          role: 'Frontend Developer',
-          period: '2022 – 2023',
-          description: 'Built 3D web experiences for 15+ client projects.',
-        },
       ],
       education: [
         {
@@ -155,7 +160,7 @@ async function seedDatabase() {
     await Project.insertMany([
       {
         title: 'NeuroChat AI',
-        description: 'Real-time AI chat platform with GPT-4 integration, streaming responses, and conversation history.',
+        description: 'Real-time AI chat platform with GPT-4 integration.',
         tech: ['React', 'Node.js', 'MongoDB', 'Socket.io'],
         github: 'https://github.com',
         demo: 'https://example.com',
@@ -164,7 +169,7 @@ async function seedDatabase() {
       },
       {
         title: '3D Portfolio Studio',
-        description: 'Interactive 3D portfolio builder with drag-and-drop editor and real-time preview.',
+        description: 'Interactive 3D portfolio builder with drag-and-drop editor.',
         tech: ['React', 'Three.js', 'Node.js'],
         github: 'https://github.com',
         demo: 'https://example.com',
