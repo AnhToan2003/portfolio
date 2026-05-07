@@ -20,6 +20,9 @@ import Footer from './components/Footer'
 
 // Admin
 import Login from './pages/Login'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
+import ChangePassword from './pages/admin/ChangePassword'
 import AdminLayout from './pages/admin/AdminLayout'
 import Dashboard from './pages/admin/Dashboard'
 import ProfileEdit from './pages/admin/ProfileEdit'
@@ -83,6 +86,11 @@ export default function App() {
 
           {/* Admin auth */}
           <Route path="/admin/login" element={<Login />} />
+          <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+          <Route path="/admin/reset-password" element={<ResetPassword />} />
+          <Route path="/admin/change-password" element={
+            <ProtectedRoute><ChangePassword /></ProtectedRoute>
+          } />
 
           {/* Admin dashboard — protected */}
           <Route

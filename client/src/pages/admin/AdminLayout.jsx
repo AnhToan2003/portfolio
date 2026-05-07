@@ -28,8 +28,8 @@ export default function AdminLayout() {
     return () => { document.body.style.cursor = '' }
   }, [])
 
-  function handleLogout() {
-    logout()
+  async function handleLogout() {
+    await logout()
     toast.success('Logged out')
     navigate('/admin/login')
   }
@@ -82,11 +82,11 @@ export default function AdminLayout() {
         </a>
         <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white/3">
           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-            {user?.username?.[0]?.toUpperCase() || 'A'}
+            {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'A'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-medium truncate">{user?.username}</p>
-            <p className="text-gray-500 text-xs capitalize">{user?.role}</p>
+            <p className="text-white text-xs font-medium truncate">{user?.name || 'Admin'}</p>
+            <p className="text-gray-500 text-xs truncate">{user?.email}</p>
           </div>
           <button
             onClick={handleLogout}
@@ -129,7 +129,7 @@ export default function AdminLayout() {
           </button>
           <div className="flex-1" />
           <span className="text-gray-500 text-sm hidden sm:block">
-            Logged in as <span className="text-gray-300">{user?.username}</span>
+            Logged in as <span className="text-gray-300">{user?.name || user?.email}</span>
           </span>
         </header>
 
