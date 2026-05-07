@@ -1,6 +1,7 @@
-import { useRef, useState, useCallback, useEffect } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { FiGithub, FiExternalLink, FiX } from 'react-icons/fi'
+import { useQuery } from '@tanstack/react-query'
 import { useContent } from '../context/ContentContext'
 import api from '../utils/api'
 
@@ -150,19 +151,34 @@ function ProjectModal({ project, onClose }) {
   )
 }
 
+function ProjectSkeleton() {
+  return (
+    <div className="glass rounded-2xl overflow-hidden animate-pulse">
+      <div className="h-48 bg-white/5" />
+      <div className="p-5 space-y-3">
+        <div className="h-4 bg-white/5 rounded w-3/4" />
+        <div className="h-3 bg-white/5 rounded w-full" />
+        <div className="h-3 bg-white/5 rounded w-2/3" />
+        <div className="flex gap-1.5 mt-2">
+          {[1, 2, 3].map(i => <div key={i} className="h-5 w-14 bg-white/5 rounded-lg" />)}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Projects() {
   const { content } = useContent()
   const { projects: pc } = content
 
-  const [projects, setProjects] = useState([])
   const [selectedProject, setSelectedProject] = useState(null)
   const [filter, setFilter] = useState('All')
 
-  useEffect(() => {
-    api.get('/api/projects').then(res => {
-      if (res.data?.data?.length) setProjects(res.data.data)
-    }).catch(() => {})
-  }, [])
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => api.get('/api/projects').then(r => r.data?.data || []),
+    staleTime: 5 * 60 * 1000,
+  })
 
   const categories = ['All', ...new Set(projects.map(p => p.category).filter(Boolean))]
   const filtered = filter === 'All' ? projects : projects.filter(p => p.category === filter)
@@ -213,17 +229,23 @@ export default function Projects() {
           ))}
         </motion.div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={filter}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
-          >
-            {filtered.map((project, i) => (
-              <ProjectCard key={project._id || i} project={project} index={i} onOpen={setSelectedProject} />
-            ))}
-          </motion.div>
-        </AnimatePresence>
+        {projects.length === 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {Array.from({ length: 6 }).map((_, i) => <ProjectSkeleton key={i} />)}
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={filter}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+            >
+              {filtered.map((project, i) => (
+                <ProjectCard key={project._id || i} project={project} index={i} onOpen={setSelectedProject} />
+              ))}
+            </motion.div>
+          </AnimatePresence>
+        )}
       </div>
 
       <AnimatePresence>

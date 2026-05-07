@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import {
   SiReact, SiNextdotjs, SiTypescript, SiJavascript, SiTailwindcss,
@@ -8,6 +8,7 @@ import {
   SiMysql, SiFirebase, SiKubernetes, SiJenkins, SiNginx, SiLinux,
 } from 'react-icons/si'
 import { FiCode } from 'react-icons/fi'
+import { useQuery } from '@tanstack/react-query'
 import { useContent } from '../context/ContentContext'
 import api from '../utils/api'
 
@@ -78,20 +79,35 @@ function SkillCard({ skill, index, inView }) {
   )
 }
 
+function SkillSkeleton() {
+  return (
+    <div className="glass rounded-2xl p-5 flex flex-col gap-4 animate-pulse">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-white/5" />
+        <div className="flex-1 space-y-1.5">
+          <div className="h-3 bg-white/5 rounded w-24" />
+          <div className="h-2.5 bg-white/5 rounded w-16" />
+        </div>
+        <div className="h-3 bg-white/5 rounded w-8" />
+      </div>
+      <div className="h-1.5 rounded-full bg-white/5" />
+    </div>
+  )
+}
+
 export default function Skills() {
   const { content } = useContent()
   const { skills: sc } = content
 
-  const [skills, setSkills] = useState([])
   const [activeCategory, setActiveCategory] = useState('All')
   const sectionRef = useRef()
   const inView = useInView(sectionRef, { once: true, margin: '-100px' })
 
-  useEffect(() => {
-    api.get('/api/skills').then(res => {
-      if (res.data?.data?.length) setSkills(res.data.data)
-    }).catch(() => {})
-  }, [])
+  const { data: skills = [] } = useQuery({
+    queryKey: ['skills'],
+    queryFn: () => api.get('/api/skills').then(r => r.data?.data || []),
+    staleTime: 5 * 60 * 1000,
+  })
 
   const categories = sc.categories || ['All', 'Frontend', 'Backend', 'Tools & DevOps']
   const filtered = activeCategory === 'All' ? skills : skills.filter(s => s.category === activeCategory)
@@ -141,20 +157,26 @@ export default function Skills() {
           ))}
         </motion.div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeCategory}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-          >
-            {filtered.map((skill, i) => (
-              <SkillCard key={skill._id || skill.name} skill={skill} index={i} inView={inView} />
-            ))}
-          </motion.div>
-        </AnimatePresence>
+        {skills.length === 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => <SkillSkeleton key={i} />)}
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeCategory}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+            >
+              {filtered.map((skill, i) => (
+                <SkillCard key={skill._id || skill.name} skill={skill} index={i} inView={inView} />
+              ))}
+            </motion.div>
+          </AnimatePresence>
+        )}
       </div>
     </section>
   )

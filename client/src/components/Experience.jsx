@@ -1,6 +1,7 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { FiBriefcase, FiBook, FiCalendar, FiMapPin } from 'react-icons/fi'
+import { useQuery } from '@tanstack/react-query'
 import { useContent } from '../context/ContentContext'
 import api from '../utils/api'
 
@@ -82,32 +83,47 @@ function TimelineItem({ item, index, isLast }) {
   )
 }
 
+function TimelineSkeleton() {
+  return (
+    <div className="flex gap-6 pb-12 animate-pulse">
+      <div className="w-10 h-10 rounded-full bg-white/5 flex-shrink-0" />
+      <div className="glass rounded-2xl p-6 flex-1 space-y-3">
+        <div className="flex gap-2">
+          <div className="h-5 w-14 bg-white/5 rounded-full" />
+          <div className="h-5 w-24 bg-white/5 rounded-full" />
+        </div>
+        <div className="h-4 bg-white/5 rounded w-1/2" />
+        <div className="h-3 bg-white/5 rounded w-1/3" />
+        <div className="h-3 bg-white/5 rounded w-full" />
+        <div className="h-3 bg-white/5 rounded w-4/5" />
+      </div>
+    </div>
+  )
+}
+
 export default function Experience() {
   const { content } = useContent()
   const { experience: ec } = content
 
-  const [timeline, setTimeline] = useState([])
   const sectionRef = useRef()
   const inView = useInView(sectionRef, { once: true, margin: '-100px' })
 
-  useEffect(() => {
-    api.get('/api/experience').then(res => {
-      if (res.data?.data) {
-        const { experience = [], education = [] } = res.data.data
-        const combined = [
-          ...experience.map((e, i) => ({
-            ...e, type: 'work', color: WORK_COLORS[i % WORK_COLORS.length],
-          })),
-          ...education.map((e, i) => ({
-            ...e, type: 'education',
-            role: e.degree, company: e.school,
-            color: EDU_COLORS[i % EDU_COLORS.length],
-          })),
-        ]
-        setTimeline(combined)
-      }
-    }).catch(() => {})
-  }, [])
+  const { data: timeline = [] } = useQuery({
+    queryKey: ['experience'],
+    queryFn: async () => {
+      const res = await api.get('/api/experience')
+      const { experience = [], education = [] } = res.data?.data || {}
+      return [
+        ...experience.map((e, i) => ({ ...e, type: 'work', color: WORK_COLORS[i % WORK_COLORS.length] })),
+        ...education.map((e, i) => ({
+          ...e, type: 'education',
+          role: e.degree, company: e.school,
+          color: EDU_COLORS[i % EDU_COLORS.length],
+        })),
+      ]
+    },
+    staleTime: 5 * 60 * 1000,
+  })
 
   return (
     <section id="experience" ref={sectionRef} className="relative py-28 overflow-hidden"
@@ -132,9 +148,12 @@ export default function Experience() {
         </motion.div>
 
         <div className="max-w-3xl">
-          {timeline.map((item, i) => (
-            <TimelineItem key={item._id || i} item={item} index={i} isLast={i === timeline.length - 1} />
-          ))}
+          {timeline.length === 0
+            ? Array.from({ length: 3 }).map((_, i) => <TimelineSkeleton key={i} />)
+            : timeline.map((item, i) => (
+                <TimelineItem key={item._id || i} item={item} index={i} isLast={i === timeline.length - 1} />
+              ))
+          }
         </div>
       </div>
     </section>
