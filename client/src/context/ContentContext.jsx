@@ -49,7 +49,7 @@ const DEFAULT = {
     heading: 'Featured',
     headingAccent: 'Work',
     description: 'A selection of projects that showcase my skills across different domains.',
-    githubUrl: 'https://github.com',
+    githubUrl: 'https://github.com/AnhToan2003',
     githubLabel: 'View all on GitHub',
   },
   experience: {
@@ -65,7 +65,7 @@ const DEFAULT = {
     description: 'Have a project in mind or want to collaborate?',
     email: 'mranhtoandt@gmail.com',
     location: 'Ho Chi Minh City, Vietnam',
-    phone: '+84 xxx xxx xxx',
+    phone: '+84 079 446 0285',
   },
   social: {
     github: 'https://github.com',

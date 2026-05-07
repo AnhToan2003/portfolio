@@ -1,12 +1,16 @@
 const express = require('express')
 const router = express.Router()
 const auth = require('../middleware/auth')
-const { getContent, updateContent } = require('../controllers/contentController')
+const { sanitizeBody } = require('../middleware/validate')
+const { getContent, updateContent, getSection, updateSection } = require('../controllers/contentController')
 
-// GET /api/content — public (used by frontend to load all site text)
+// Full content doc — used by frontend ContentContext
 router.get('/', getContent)
+router.put('/', auth, sanitizeBody, updateContent)
 
-// PUT /api/content — protected (admin only)
-router.put('/', auth, updateContent)
+// Section-specific routes — GET public, PUT admin-only
+// e.g. GET /api/content/about, PUT /api/content/contact
+router.get('/:section', getSection)
+router.put('/:section', auth, sanitizeBody, updateSection)
 
 module.exports = router
