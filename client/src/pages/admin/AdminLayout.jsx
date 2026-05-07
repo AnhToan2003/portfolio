@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 import {
   FiHome, FiUser, FiCode, FiFolder, FiBriefcase,
-  FiMail, FiLogOut, FiMenu, FiX, FiExternalLink, FiEdit3,
+  FiMail, FiLogOut, FiMenu, FiX, FiExternalLink, FiEdit3, FiShield,
 } from 'react-icons/fi'
 
 const navItems = [
@@ -15,6 +15,7 @@ const navItems = [
   { to: '/admin/experience', icon: FiBriefcase, label: 'Experience' },
   { to: '/admin/messages', icon: FiMail, label: 'Messages' },
   { to: '/admin/content', icon: FiEdit3, label: 'Content' },
+  { to: '/admin/change-password', icon: FiShield, label: 'Change Password' },
 ]
 
 export default function AdminLayout() {

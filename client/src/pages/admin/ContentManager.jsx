@@ -33,6 +33,8 @@ export default function ContentManager() {
 
   useEffect(() => { setForm(JSON.parse(JSON.stringify(content))) }, [content])
 
+  const isDirty = form && content && JSON.stringify(form) !== JSON.stringify(content)
+
   function set(section, field, value) {
     setForm(prev => ({ ...prev, [section]: { ...prev[section], [field]: value } }))
   }
@@ -86,8 +88,11 @@ export default function ContentManager() {
             <FiRefreshCw size={14} /> Reset
           </button>
           <button onClick={handleSave} disabled={saving}
-            className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium text-white disabled:opacity-60"
+            className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium text-white disabled:opacity-60 relative"
             style={{ background: 'linear-gradient(135deg, #7c3aed, #06b6d4)' }}>
+            {isDirty && !saving && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 border-2 border-dark-900" />
+            )}
             <FiSave size={14} />{saving ? 'Saving…' : 'Save All'}
           </button>
         </div>

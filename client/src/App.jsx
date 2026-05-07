@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './context/AuthContext'
 import { ContentProvider } from './context/ContentContext'
 import ProtectedRoute from './components/ProtectedRoute'
+
+const queryClient = new QueryClient()
 
 // Portfolio
 import SEO from './components/SEO'
@@ -63,6 +66,7 @@ function Portfolio() {
 
 export default function App() {
   return (
+    <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <ContentProvider>
       <AuthProvider>
@@ -113,5 +117,6 @@ export default function App() {
       </AuthProvider>
       </ContentProvider>
     </BrowserRouter>
+    </QueryClientProvider>
   )
 }
